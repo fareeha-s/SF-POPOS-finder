@@ -102,7 +102,7 @@
             border: none;
             border-radius: 5px;
             transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
-            margin-top: 10px;
+            margin-top: 5px;
             display: inline-block;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
@@ -168,23 +168,19 @@
         </div>
     </header>
     <div class="container">
-        <button onclick="findNearestPOPOS()">Find Nearest POPOS</button>
-        <div id="map"></div>
+        <button onclick="findNearestPOPOS()">Find my closest POPOS</button>
+        <div id="map">
+            <!-- Removed Toggle Button -->
+        </div>
         <div id="result"></div>
     </div>
 
-    <!-- Load config file BEFORE Mapbox GL JS and your main script -->
-    <script src='config.js'></script>
+    <!-- Removed config.js loading -->
+    <!-- <script src='config.js'></script> --> 
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
     <script>
-        // Use the token loaded from config.js
-        if (typeof MAPBOX_ACCESS_TOKEN !== 'undefined') {
-            mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-        } else {
-            console.error('Mapbox Access Token not found. Make sure config.js is loaded and contains MAPBOX_ACCESS_TOKEN.');
-            // Optionally display an error message to the user on the page
-            document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Map configuration error. Access token missing.</p>';
-        }
+        // PASTE YOUR URL-SCOPED MAPBOX ACCESS TOKEN DIRECTLY HERE!
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZmFyZWVoYXMiLCJhIjoiY21hN3E0d2tsMTM4cDJyb283d201bWowayJ9.d5bfbuSuccgy6Fec5RsP-w'; // Replace with your actual, scoped token
 
         const poposLocations = [
             { id: 1, name: "Transamerica Redwood Park", address: "600 Montgomery St.", lat: 37.7952, lon: -122.4028 },
@@ -201,20 +197,33 @@
 
         let map;
         let userMarker;
+        const darkStyle = 'mapbox://styles/mapbox/dark-v11';
 
         function initMap() {
-            // Initialize Mapbox map
+            // Calculate bounds containing all POPOS locations
+            const bounds = new mapboxgl.LngLatBounds();
+            poposLocations.forEach(location => {
+                bounds.extend([location.lon, location.lat]);
+            });
+
+            // Initialize Mapbox map with dark style as default
             map = new mapboxgl.Map({
-                container: 'map', // container ID
-                style: 'mapbox://styles/mapbox/streets-v12', // style URL (using default streets style)
-                center: [-122.4194, 37.7749], // starting position [lng, lat]
-                zoom: 13 // starting zoom
+                container: 'map', 
+                style: darkStyle, // Start with dark style
+                center: [-122.4194, 37.7749], 
+                zoom: 12 
+            });
+
+            // Fit map to the calculated bounds on initial load
+            map.fitBounds(bounds, {
+                padding: 50, // Add padding so markers aren't right on the edge
+                duration: 0 // Fit immediately without animation
             });
             
             // Add zoom and rotation controls to the map.
             map.addControl(new mapboxgl.NavigationControl());
 
-            // Add POPOS markers (will be done in the next step)
+            // Add POPOS markers
             addPoposMarkers();
         }
 
@@ -265,13 +274,15 @@
                         distance_string = `${closest.distance.toFixed(1)} miles`;
                     }
                     
-                    proximityInfo = `<p class="proximity-info">You are approximately <strong>${distance_string}</strong> away!</p>`;
+                    proximityInfo = `<p>You are approximately <strong>${distance_string}</strong> away.</p>`;
 
                     document.getElementById('result').innerHTML = `
-                        <p>The nearest POPOS is:</p>
-                        <p class="popos-name">${closest.name}</p>
-                        <p>📍 ${closest.address}</p>
-                        <p><a href="https://sfpopos.com/popos/${closest.id}" target="_blank">Hours & More Info</a></p>
+                        <p>The nearest POPOS to you is:</p>
+                        <p> 
+                            <strong>${closest.name}</strong><br>
+                            📍 ${closest.address}<br>
+                            <a href="https://sfpopos.com/popos/${closest.id}" target="_blank">Hours & More Info</a>
+                        </p>
                         ${proximityInfo}
                         <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(closest.address)}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
                     `;
@@ -279,24 +290,44 @@
                     document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
                     
                     if (map) {
-                        // Fly to user location
-                        map.flyTo({
-                            center: [userLon, userLat],
-                            zoom: 14,
-                            essential: true // this animation is considered essential with respect to prefers-reduced-motion
-                        });
+                        const userCoords = [userLon, userLat];
+                        const poposCoords = [closest.lon, closest.lat];
+                        const distanceThresholdMiles = 100; // Define "impossibly far"
                         
-                        // Remove previous user marker if it exists
+                        // Remove previous user marker if it exists (do this first)
                         if (userMarker) {
                             userMarker.remove();
                         }
-                        
-                        // Add new user marker
-                        userMarker = new mapboxgl.Marker({ color: '#FF0000' }) // Red marker for user
-                            .setLngLat([userLon, userLat])
+
+                        // Add new user marker (always add it)
+                        userMarker = new mapboxgl.Marker({ color: '#FF0000' })
+                            .setLngLat(userCoords)
                             .setPopup(new mapboxgl.Popup().setText('Your Location'))
-                            .addTo(map)
-                            .togglePopup(); // Open popup immediately
+                            .addTo(map);
+                            // .togglePopup(); // Maybe don't auto-open if map view changes significantly?
+
+                        if (closest.distance > distanceThresholdMiles) {
+                            // User is far away, center on POPOS
+                            map.flyTo({
+                                center: poposCoords,
+                                zoom: 15, // Zoom in on the POPOS
+                                essential: true
+                            });
+                            // User marker is added but might be off-screen
+                        } else {
+                            // User is close, fit both points
+                            const bounds = new mapboxgl.LngLatBounds()
+                                .extend(userCoords)
+                                .extend(poposCoords);
+
+                            map.fitBounds(bounds, {
+                                padding: { top: 50, bottom: 100, left: 50, right: 50 }, // Adjust padding as needed (more bottom for result box)
+                                essential: true,
+                                maxZoom: 16 // Don't zoom in excessively close
+                            });
+                        }
+                            
+                        // Remove polyline logic (already removed)
                     }
                 }, function(error) {
                     document.getElementById('result').innerHTML = `<p>Error getting location: ${error.message}</p>`;
