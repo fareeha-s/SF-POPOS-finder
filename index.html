@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POPOS Finder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
     <style>
         :root {
             --background-color: #C5D86D;
             --text-color: #3C3C3C;
             --header-color: #3C3C3C;
+            --border-color: #3C3C3C;
         }
-        body { 
-            font-family: 'Raleway', sans-serif;
+        body {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 17px;
             background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.6;
@@ -28,20 +31,33 @@
         }
         header {
             text-align: center;
-            padding: 1rem;
+            padding: 2rem 1rem;
             margin-bottom: 1rem;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--background-color);
         }
-        h1 { 
+        .header-subtitle {
+            background-color: var(--header-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+        }
+        h1 {
+            font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            margin: 0;
-            font-size: 2.5rem;
+            margin: 0 0 1rem 0;
+            font-size: 3rem;
             color: var(--header-color);
         }
-        h2 {
-            font-weight: 400;
-            margin: 0;
-            font-size: 1.8rem;
-            color: var(--header-color);
+        header p {
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 1rem;
+            color: var(--text-color);
         }
         #map { 
             height: 400px;
@@ -57,23 +73,48 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             box-sizing: border-box;
-            text-align: left;
+            text-align: center;
+            display: none;
+        }
+        #result p {
+            font-weight: 400;
+            margin-bottom: 0.2em;
+        }
+        #result p.popos-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-top: 0.5em;
+        }
+        #result p.proximity-info {
+            margin-top: 1em;
+        }
+        #result strong {
+            font-weight: 700;
         }
         button {
-            font-family: 'Raleway', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             font-size: 16px;
             font-weight: 700;
             padding: 12px 24px;
             cursor: pointer;
-            background-color: var(--header-color);
-            color: white;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--text-color);
             border: none;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
-            margin-top: 20px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
+            margin-top: 10px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         button:hover {
-            background-color: #2a2a2a;
+            background-color: rgba(240, 240, 240, 0.9);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        button:active {
+            background-color: rgba(230, 230, 230, 0.9);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transform: translateY(1px);
         }
         a {
             color: var(--header-color);
@@ -84,16 +125,19 @@
         }
         .maps-link {
             display: inline-block;
-            margin-top: 10px;
-            padding: 5px 10px;
-            background-color: var(--header-color);
+            margin-top: 15px;
+            padding: 8px 12px;
+            background-color: #4285F4;
             color: white;
             border-radius: 5px;
             text-decoration: none;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
         }
         .maps-link:hover {
-            background-color: #2a2a2a;
+            background-color: #3367D6;
             text-decoration: none;
+            color: white;
         }
         @media (max-width: 768px) {
             .container {
@@ -105,33 +149,43 @@
             h1 {
                 font-size: 2rem;
             }
-            h2 {
-                font-size: 1.5rem;
-            }
             button {
                 width: 100%;
+            }
+            header p {
+                max-width: 90%;
             }
         }
     </style>
 </head>
 <body>
     <header>
-        <h2>SAN FRANCISCO</h2>
+        <div class="header-subtitle">SAN FRANCISCO</div>
         <h1>Privately Owned Public Open Spaces</h1>
+        <p>POPOS are publicly accessible spaces in forms of plazas, terraces, atriums, small parks, and even snippets which are provided and maintained by private developers. In San Francisco, POPOS mostly appear in the Downtown office district area.</p>
+        <div class="attribution" style="font-size: 0.75rem; margin-top: 0.5rem; opacity: 0.8; font-style: italic;">
+            <p>POPOS listings sourced with gratitude from <a href="https://sfpopos.com/" target="_blank">sfpopos.com</a> 🫶</p>
+        </div>
     </header>
     <div class="container">
-       <p>POPOS are publicly accessible spaces in forms of plazas, terraces, atriums, small parks, and even snippets which are provided and maintained by private developers. In San Francisco, POPOS mostly appear in the Downtown office district area.</p>
-
-<div style="font-size: 0.9rem; margin: 10px 0 20px; opacity: 0.7;">
-    <p>POPOS listings sourced with gratitude from <a href="https://sfpopos.com/" target="_blank">sfpopos.com</a></p>
-</div>
-        <div id="map"></div>
         <button onclick="findNearestPOPOS()">Find Nearest POPOS</button>
+        <div id="map"></div>
         <div id="result"></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Load config file BEFORE Mapbox GL JS and your main script -->
+    <script src='config.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
     <script>
+        // Use the token loaded from config.js
+        if (typeof MAPBOX_ACCESS_TOKEN !== 'undefined') {
+            mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+        } else {
+            console.error('Mapbox Access Token not found. Make sure config.js is loaded and contains MAPBOX_ACCESS_TOKEN.');
+            // Optionally display an error message to the user on the page
+            document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Map configuration error. Access token missing.</p>';
+        }
+
         const poposLocations = [
             { id: 1, name: "Transamerica Redwood Park", address: "600 Montgomery St.", lat: 37.7952, lon: -122.4028 },
             { id: 2, name: "Empire Park", address: "648 Commercial St.", lat: 37.7977, lon: -122.4016 },
@@ -149,16 +203,33 @@
         let userMarker;
 
         function initMap() {
-            map = L.map('map').setView([37.7749, -122.4194], 14);
+            // Initialize Mapbox map
+            map = new mapboxgl.Map({
+                container: 'map', // container ID
+                style: 'mapbox://styles/mapbox/streets-v12', // style URL (using default streets style)
+                center: [-122.4194, 37.7749], // starting position [lng, lat]
+                zoom: 13 // starting zoom
+            });
+            
+            // Add zoom and rotation controls to the map.
+            map.addControl(new mapboxgl.NavigationControl());
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            // Add POPOS markers (will be done in the next step)
+            addPoposMarkers();
+        }
 
+        // New function to handle adding POPOS markers
+        function addPoposMarkers() {
             poposLocations.forEach(location => {
-                L.marker([location.lat, location.lon])
-                 .addTo(map)
-                 .bindPopup(createPoposPopup(location));
+                // Create popup content
+                const popupContent = createPoposPopup(location); // Reuse existing function for content
+
+                // Create marker and add popup
+                new mapboxgl.Marker()
+                    .setLngLat([location.lon, location.lat])
+                    .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
+                        .setHTML(popupContent))
+                    .addTo(map);
             });
         }
 
@@ -168,6 +239,9 @@
                     const userLat = position.coords.latitude;
                     const userLon = position.coords.longitude;
                     
+                    // Rough bounding box for San Francisco
+                    const isInSF = userLat > 37.70 && userLat < 37.81 && userLon > -122.52 && userLon < -122.35;
+                    
                     let sortedLocations = poposLocations.map(location => ({
                         ...location,
                         distance: getDistanceFromLatLonInMiles(userLat, userLon, location.lat, location.lon)
@@ -175,28 +249,64 @@
 
                     const [closest, second, third] = sortedLocations;
 
+                    let proximityInfo = '';
+                    let distance_string = '';
+                    const walkTime = Math.round(closest.distance * 5280 / 272); // Approx minutes walk (3.1 mph)
+                    
+                    if (walkTime <= 25) {
+                        distance_string = `${walkTime} min walk`;
+                    } else if (walkTime > 25 && isInSF) {
+                        // Very rough drive time estimate (~18mph average city speed)
+                        const driveTimeBaseMinutes = (closest.distance / 18) * 60;
+                        const lowerBound = Math.max(5, Math.round(driveTimeBaseMinutes * 0.8)); // At least 5 mins
+                        const upperBound = Math.round(driveTimeBaseMinutes * 1.2);
+                        distance_string = `~ ${lowerBound}-${upperBound} min drive`; // Display range
+                    } else { // >25 min walk and outside SF
+                        distance_string = `${closest.distance.toFixed(1)} miles`;
+                    }
+                    
+                    proximityInfo = `<p class="proximity-info">You are approximately <strong>${distance_string}</strong> away!</p>`;
+
                     document.getElementById('result').innerHTML = `
-                        <p>The nearest POPOS is <strong><a href="https://sfpopos.com/popos/${closest.id}" target="_blank">${closest.name}</a></strong>.</p>
-                        <p><a href="https://sfpopos.com/popos/${closest.id}" target="_blank">${closest.address}</a></p>
-                        ${closest.distance < 0.5 ? `<p>Approximately ${Math.round(closest.distance * 5280 / 272)} min walk</p>` : ''}
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(closest.address)}" target="_blank" class="maps-link">Open in Google Maps</a>
+                        <p>The nearest POPOS is:</p>
+                        <p class="popos-name">${closest.name}</p>
+                        <p>📍 ${closest.address}</p>
+                        <p><a href="https://sfpopos.com/popos/${closest.id}" target="_blank">Hours & More Info</a></p>
+                        ${proximityInfo}
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(closest.address)}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
                     `;
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
                     
                     if (map) {
-                        map.setView([userLat, userLon], 15);
+                        // Fly to user location
+                        map.flyTo({
+                            center: [userLon, userLat],
+                            zoom: 14,
+                            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                        });
                         
+                        // Remove previous user marker if it exists
                         if (userMarker) {
-                            map.removeLayer(userMarker);
+                            userMarker.remove();
                         }
-                        userMarker = L.marker([userLat, userLon]).addTo(map).bindPopup('Your Location').openPopup();
                         
-                        L.polyline([[userLat, userLon], [closest.lat, closest.lon]], {color: '#3C3C3C'}).addTo(map);
+                        // Add new user marker
+                        userMarker = new mapboxgl.Marker({ color: '#FF0000' }) // Red marker for user
+                            .setLngLat([userLon, userLat])
+                            .setPopup(new mapboxgl.Popup().setText('Your Location'))
+                            .addTo(map)
+                            .togglePopup(); // Open popup immediately
                     }
                 }, function(error) {
                     document.getElementById('result').innerHTML = `<p>Error getting location: ${error.message}</p>`;
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
                 });
             } else {
                 document.getElementById('result').innerHTML = '<p>Geolocation is not supported by your browser. Please try using a different browser or device.</p>';
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
             }
         }
 
@@ -221,7 +331,7 @@
             return `
                 <strong>${location.name}</strong><br>
                 <a href="https://sfpopos.com/popos/${location.id}" target="_blank">${location.address}</a><br>
-                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}" target="_blank" class="maps-link">Open in Google Maps</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
             `;
         }
 

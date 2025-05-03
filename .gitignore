@@ -1,0 +1,9 @@
+# Ignore configuration files containing sensitive info
+config.js
+
+# Optional: Ignore node_modules if you ever use npm
+# node_modules/
+
+# Optional: Ignore OS-specific files
+.DS_Store
+Thumbs.db 
