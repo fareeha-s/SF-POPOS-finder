@@ -284,7 +284,7 @@
                             <a href="https://sfpopos.com/popos/${closest.id}" target="_blank">Hours & More Info</a>
                         </p>
                         ${proximityInfo}
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(closest.address)}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(closest.address + ', San Francisco, CA')}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
                     `;
                     document.getElementById('result').style.display = 'block';
                     document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
@@ -362,7 +362,7 @@
             return `
                 <strong>${location.name}</strong><br>
                 <a href="https://sfpopos.com/popos/${location.id}" target="_blank">${location.address}</a><br>
-                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address + ', San Francisco, CA')}" target="_blank" class="maps-link">🗺️ Open in Google Maps</a>
             `;
         }
 
